@@ -36,48 +36,57 @@ namespace CharacterCreator
             }
         }
 
-        /// Toggles between the available armor attachments.
-        public void ChangeArmor()
+        /// Toggles between the available attachments for the specified attachment type.
+        public void ChangeAttachment(AttachmentType attachmentType, bool isNext)
         {
-            CycleAttachment(AttachmentType.Armor);
-        }
-
-        /// Toggles between the available beard attachments.
-        public void ChangeBeard()
-        {
-            CycleAttachment(AttachmentType.Beard);
-        }
-
-        /// Toggles between the available hair attachments.
-        public void ChangeHair()
-        {
-            CycleAttachment(AttachmentType.Hair);
+            CycleAttachment(attachmentType, isNext);
         }
 
         /// Toggle between the available outfits.
-        public void ChangeOutfit()
+        public void ChangeOutfit(bool isNext)
         {
             OutfitData outfit = _outfits[0];
+            int meshesLength = outfit.meshes.Length;
             
             // Get the index of the currently selected mesh
             int meshIndex = Array.IndexOf(outfit.meshes, outfit.skinnedMeshRenderer.sharedMesh);
 
             // Assign the next index. Loop back to the first index when the last index is reached.
-            outfit.skinnedMeshRenderer.sharedMesh = outfit.meshes[(meshIndex + 1) % outfit.meshes.Length];
+            if (isNext)
+            {
+                outfit.skinnedMeshRenderer.sharedMesh = outfit.meshes[(meshIndex + 1) % meshesLength];
+            }
+            else
+            {
+                outfit.skinnedMeshRenderer.sharedMesh = outfit.meshes[(meshIndex - 1 + meshesLength) % meshesLength];
+            }
         }
 
-        /// Cycles to the next item for a specific attachment type.
-        /// <param name="type"> The type of attachment to cycle. </param>
-        private void CycleAttachment(AttachmentType type)
+        /// Cycles to either the previous or the next attachment for a specific attachment type.
+        /// <param name="type"> The type of attachment. </param>
+        /// <param name="isNext"> Indicate whether to cycle to the next or the previous attachment. </param>
+        private void CycleAttachment(AttachmentType type, bool isNext)
         {
+            
             if (!_attachmentLookup.TryGetValue(type, out AttachmentData attachmentData)) return;
-            if (attachmentData.attachments.Length == 0) return;
+            int attachmentsLength = attachmentData.attachments.Length;
+            if (attachmentsLength == 0) return;
 
-            // Disable current item
+            // Disable current attachment
             attachmentData.attachments[attachmentData.currentIndex].SetActive(false);
-
-            // Move to the next item and enable it
-            attachmentData.currentIndex = (attachmentData.currentIndex + 1) % attachmentData.attachments.Length;
+            
+            if (isNext)
+            {
+                // Move to the next circular index
+                attachmentData.currentIndex = (attachmentData.currentIndex + 1) % attachmentsLength;
+            }
+            else
+            {
+                // Move to the previous circular index
+                attachmentData.currentIndex = (attachmentData.currentIndex - 1 + attachmentsLength) % attachmentsLength;
+            }
+            
+            // Enable the new current attachment
             attachmentData.attachments[attachmentData.currentIndex].SetActive(true);
         }
 
